@@ -7,6 +7,16 @@ computing device consisting of a some states arranged in a graph
 
 module StateGraph () where
 
+import qualified Data.Map.Strict as Map
+import qualified Data.IntMap as IntMap
+import qualified Data.Set as Set
+import qualified Data.IntSet as IntSet
+import qualified Data.MultiSet as MultiSet
+import qualified Text.Dot as Dot
+import Data.List
+import Data.Hashable
+import GHC.Generics (Generic)
+
 -- | A register machine instruction (Korec).
 data Instruction = Dec | Inc
                  deriving (Eq, Ord, Show, Read, Generic)
