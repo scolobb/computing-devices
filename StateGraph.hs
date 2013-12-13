@@ -143,3 +143,6 @@ toFileHighlight highlight graph filename = writeFile filename $ (Dot.showDot . t
 
 toFile :: StateGraph -> FilePath -> IO ()
 toFile = toFileHighlight IntSet.empty
+
+fromFile :: FilePath -> IO StateGraph
+fromFile filename = readFile filename >>= return . read
