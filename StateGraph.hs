@@ -5,7 +5,20 @@ A draft solution for manipulating state graphs.  A state graph is a
 computing device consisting of a some states arranged in a graph
 (suprise) whose edges are labelled with conditions and operations.-}
 
-module StateGraph () where
+module StateGraph
+       (
+         Instruction (..)
+       , Condition (..)
+       , Transition (..)
+       , newTransition
+       , StateGraph (..)
+       , newStateGraph
+       , stateCount
+       , toDotHighlight
+       , toDot
+       , toFileHighlight
+       , toFile
+       ) where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.IntMap as IntMap
