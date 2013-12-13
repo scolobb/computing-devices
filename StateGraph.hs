@@ -143,10 +143,3 @@ toFileHighlight highlight graph filename = writeFile filename $ (Dot.showDot . t
 
 toFile :: StateGraph -> FilePath -> IO ()
 toFile = toFileHighlight IntSet.empty
-
--- | Renders the .dot description of the state graph in the supplied file.
-doToDot :: FilePath -> FilePath -> IO ()
-doToDot graphFile dotFile = do
-  graphString <- readFile graphFile
-  let graph = read graphString :: StateGraph
-  toFile graph dotFile
