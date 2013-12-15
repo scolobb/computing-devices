@@ -18,6 +18,7 @@ module StateGraph
        , toDot
        , toFileHighlight
        , toFile
+       , fromFile
        ) where
 
 import qualified Data.Map.Strict as Map
