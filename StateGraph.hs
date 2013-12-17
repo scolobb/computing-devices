@@ -147,3 +147,8 @@ toFile = toFileHighlight IntSet.empty
 
 fromFile :: FilePath -> IO StateGraph
 fromFile filename = readFile filename >>= return . read
+
+listRegs :: StateGraph -> [Int]
+listRegs (StateGraph mx _ _) = sort . nub . concat
+                               $ [ IntMap.keys ops | allTrans <- Map.elems mx
+                                                   , (Transition ops _) <- Set.elems allTrans ]
