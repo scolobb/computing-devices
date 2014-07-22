@@ -22,6 +22,7 @@ data Instruction
     -- | Try decrementing the register; if successful, go to the first
     -- state.  Otherwise, go to the second state.
   | RiZM Register State State
+  | HALT
   deriving (Show, Read, Eq, Ord)
 
 type Program = IntMap.IntMap Instruction
