@@ -7,8 +7,6 @@ module FormalLanguages ( Symbol
                        , Language
                        ) where
 
-import qualified Data.Set as Set
-
 type Symbol = String
 type Word = [Symbol]
-type Language = Set.Set Word
+type Language = [Word]
