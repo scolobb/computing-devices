@@ -19,6 +19,7 @@ module StateGraph
        , toFileHighlight
        , toFile
        , fromFile
+       , listRegs
        ) where
 
 import qualified Data.Map.Strict as Map
