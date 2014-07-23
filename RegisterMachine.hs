@@ -39,7 +39,7 @@ data RegisterMachine = RegisterMachine [Register] Program
 u22 :: RegisterMachine
 u22 = RegisterMachine [0..7] $ IntMap.fromList
       -- Instruction reader.
-      [ (  1,   RiZM 1    6  3 )
+      [ (  1,   RiZM 1    3  6 )
       , (  3,   RiP  7    1    )
       , (  4,   RiZM 5    6  7 )
       , (  6,   RiP  6    4    )
