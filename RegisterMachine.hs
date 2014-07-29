@@ -9,6 +9,7 @@ module RegisterMachine ( State
                        , Program
                        , RegisterMachine(..)
                        , u22
+                       , registerUse
                        ) where
 
 import qualified Data.IntMap as IntMap
@@ -68,3 +69,17 @@ u22 = RegisterMachine [0..7] $ IntMap.fromList
 
       , ( 34,   HALT           )
       ]
+
+-- | Calculates the number of times a register is used in RiP commands
+-- and RiZM commands respectively.
+registerUse :: RegisterMachine -> Register -> (Int, Int)
+registerUse (RegisterMachine _ prog) reg =
+  foldl (\(ripUse, rizmUse) instr -> case instr of
+            (RiP r _) -> if r == reg
+                         then (ripUse + 1, rizmUse)
+                         else (ripUse, rizmUse)
+            (RiZM r _ _) -> if r == reg
+                            then (ripUse, rizmUse + 1)
+                            else (ripUse, rizmUse)
+            HALT -> (ripUse, rizmUse)
+          )(0, 0) $ IntMap.elems prog
