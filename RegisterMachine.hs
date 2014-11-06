@@ -9,7 +9,7 @@ module RegisterMachine ( State
                        , Program
                        , RegisterMachine(..)
                        , u22
-                       , u19
+                       , u20
                        , registerUse
                        ) where
 
@@ -71,13 +71,13 @@ u22 = RegisterMachine [0..7] $ IntMap.fromList
       , ( 34,   HALT           )
       ]
 
--- | A (weakly) universal register machine with 19 instructions of
+-- | A (weakly) universal register machine with 20 instructions of
 -- types /RiP/ and /RiZM/.
 --
 -- Ivan Korec: Small Universal Register
 -- Machines. Theor. Comput. Sci. 168(2): 267-301 (1996).
-u19 :: RegisterMachine
-u19 = RegisterMachine [0,1,2,4,5,6,7] $ IntMap.fromList
+u20 :: RegisterMachine
+u20 = RegisterMachine [0,1,2,4,5,6,7] $ IntMap.fromList
       -- Instruction reader.
       [ (  1,   RiZM 1    3  6 )
       , (  3,   RiP  7    1    )
