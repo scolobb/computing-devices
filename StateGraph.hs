@@ -22,6 +22,7 @@ module StateGraph
        , listRegs
        , u22compressed
        , u20compressed
+       , buildAdjTrans
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -106,6 +107,16 @@ stateCount (StateGraph _ adj _) = IntMap.size adj
 buildMx :: [( (Int,Int), ( [(Int, [Instruction])], [(Int, Condition)] ) )] -> Map.Map (Int, Int) (Set.Set Transition)
 buildMx = Map.fromListWith Set.union . map (\(e, (plainOps, plainConds)) ->
                                                      (e, Set.singleton $ newTransition plainOps plainConds))
+
+-- | Maps vertices to lists of the form (targetVertex, transition).
+buildAdjTrans :: StateGraph -> IntMap.IntMap [(Int, Transition)]
+buildAdjTrans (StateGraph mx _ _) =
+  -- Note that we not only drop the terminal states, but also all
+  -- transitions leading into them.
+  IntMap.fromListWith (++) [ (v, [(w, trans)])
+                           | ((v, w), allTrans) <- Map.assocs mx
+                           , trans <- Set.elems allTrans
+                           ]
 
 toDotHighlight :: IntSet.IntSet -> StateGraph -> Dot.Dot ()
 toDotHighlight highlight (StateGraph mx adj _) = do
