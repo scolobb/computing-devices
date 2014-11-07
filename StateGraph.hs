@@ -31,6 +31,10 @@ import qualified Text.Dot as Dot
 import Data.List
 import Data.Hashable
 import GHC.Generics (Generic)
+import Data.Maybe (catMaybes)
+import Control.Monad.Trans.Class (lift)
+import qualified Control.Monad.Trans.Writer.Lazy as Writer
+import qualified Control.Monad.Trans.State.Lazy as State
 
 -- | A register machine instruction (Korec).
 data Instruction = Dec | Inc
@@ -153,3 +157,128 @@ listRegs :: StateGraph -> [Int]
 listRegs (StateGraph mx _ _) = sort . nub . concat
                                $ [ IntMap.keys ops | allTrans <- Map.elems mx
                                                    , (Transition ops _) <- Set.elems allTrans ]
+
+-- | Checks if the supplied state can be compressed, i.e., thrown away
+-- by merging the transitions going out of this state with the
+-- transitions coming into it.
+--
+-- Such an operation can be done when none of the outgoing edges
+-- checks the contents of a register that is modified by a dec
+-- instruction.
+compressible :: StateGraph -> Int -> Bool
+compressible (StateGraph _ adj revAdj) v0
+  | (adj IntMap.! v0 == []) || (revAdj IntMap.! v0 == []) = False -- Don't compress initial and final states.
+compressible (StateGraph _ adj revAdj) v0
+  | (v0 `elem` (adj IntMap.! v0)) = False -- Don't even try to compress states with loops.
+compressible (StateGraph mx adj revAdj) v0 =
+  let inTrans  = concat [ Set.elems $ mx Map.! (v, v0) | v <- revAdj IntMap.! v0 ]
+      outTrans = concat [ Set.elems $ mx Map.! (v0, v) | v <- adj    IntMap.! v0 ]
+  in and $ do
+    (Transition inOps _   ) <- inTrans
+    (Transition _ outConds) <- outTrans
+    return $ not $ any (Dec `MultiSet.member`)
+                        $ IntMap.elems $ IntMap.intersection inOps outConds
+
+-- | Compresses the supplied state, i.e., removes it and merges all
+-- its outgoing transitions with its ingoing transitions.
+--
+-- This function does NOT check whether the supplied state is indeed
+-- compressible.
+compress :: StateGraph -> Int -> StateGraph
+compress (StateGraph mx adj revAdj) v0 =
+  let preds = revAdj IntMap.! v0
+      succs = adj    IntMap.! v0
+
+      (oldInList, oldOutList, newTransMaybes) = unzip3 $ do
+        pred <- preds
+        succ <- succs
+        inTrans  <- Set.elems $ mx Map.! (pred, v0)
+        outTrans <- Set.elems $ mx Map.! (v0, succ)
+        return (((pred, v0), ()), ((v0, succ), ()), maybeNewTrans (pred, succ) inTrans outTrans)
+      newTransList = catMaybes newTransMaybes
+
+      cleanMx = (mx `Map.difference` (Map.fromList $ oldInList ++ oldOutList))
+      newMx = Map.unionWith Set.union cleanMx $ Map.fromListWith Set.union newTransList
+
+  in newStateGraph newMx
+  where maybeNewTrans e trans1@(Transition inOps inConds) trans2@(Transition outOps outConds) =
+          -- According to the compressibility criterion we know that
+          -- the incoming transition modifies a register that is
+          -- checked by the outgoing transition, it can only be an
+          -- 'Inc' operation.
+          let detRegs = outConds `IntMap.intersection` inOps
+              bothCheck = IntMap.intersectionWith (,) inConds outConds
+          in if badConds bothCheck trans1 trans2 || badOutConds detRegs
+                -- The incoming transition increments a register,
+                -- while the outgoing one requires that the same
+                -- register be zero.
+             then Nothing
+                  -- The incoming transition increments some
+                  -- registers, and the outgoing transition requires
+                  -- that these registers be nonzero.  Just forget
+                  -- about these checks altogether.
+             else let outConds' = outConds `IntMap.difference` detRegs
+                      newOps = IntMap.unionWith MultiSet.union inOps outOps
+                      newConds = inConds `IntMap.union` outConds'
+                  in Just (e, Set.singleton $ Transition newOps newConds)
+
+        -- This function analyses the four possible combinations of
+        -- clashing conditions on a register.  See the paper for even
+        -- more details.
+        badConds bothCheck (Transition inOps inConds) (Transition outOps outConds) =
+          any (\(reg, (inCond, outCond)) ->
+                case (inCond, outCond) of
+                  (Zero,    Zero   ) -> case IntMap.lookup reg inOps of
+                    Nothing    -> False
+                    Just regOp -> Inc `MultiSet.member`    regOp
+                  (Zero,    NotZero) -> case IntMap.lookup reg inOps of
+                    Nothing    -> True
+                    Just regOp -> Inc `MultiSet.notMember` regOp
+                  (NotZero, Zero   ) -> True
+                  (NotZero, NotZero) -> False
+              ) $ IntMap.assocs bothCheck
+
+        -- This function analyses the interference between the
+        -- operations of the ingoing transition and the conditions of
+        -- the outgoing transition.  See the paper for even more
+        -- details.
+        badOutConds detRegs = Zero `elem` IntMap.elems detRegs
+
+-- | Computes the length of a transition (the number of operations and
+-- conditions associated with it).
+transLen :: Transition -> Int
+transLen (Transition ops conds) =
+  let nops = sum $ map MultiSet.size $ IntMap.elems ops
+      nconds = IntMap.size conds
+  in nops + nconds
+
+-- | Checks if the transitions in the state transition graph are too
+-- long.
+--
+-- The point is that Rudi manages to get transitions of maximal weight
+-- (number of (operations + conditions)) 6, while our best result so
+-- far is 7.
+transitionsTooLong :: StateGraph -> Int -> Bool
+transitionsTooLong (StateGraph mx _ _) maxLen =
+  any (> maxLen) $ map transLen $ concatMap Set.elems $ Map.elems mx
+
+-- | Starting from a certain graph, does all possible compressions on
+-- it and returns a list of compressed graphs and the corresponding
+-- list of states that were chosen for compression.
+allCompressions :: StateGraph -> [([Int], StateGraph)]
+allCompressions graph0 = Writer.execWriter $ State.evalStateT (go [] graph0) IntSet.empty
+  where go pickedStates graph = do
+          seen <- State.get
+          let graphHash = hash graph
+          if graphHash `IntSet.member` seen
+            then return ()
+            else do
+            State.put $ graphHash `IntSet.insert` seen
+            case allCompressible graph of
+              [] -> lift $ Writer.tell [(reverse pickedStates, graph)]
+              states -> mapM_ (\state -> do
+                                  let graph' = compress graph state
+                                  go (state:pickedStates) graph'
+                                ) states
+
+        allCompressible graph@(StateGraph _ adj _) = filter (compressible graph) $ IntMap.keys adj
