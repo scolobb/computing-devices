@@ -296,6 +296,18 @@ allCompressions graph0 = Writer.execWriter $ State.evalStateT (go [] graph0) Int
 
         allCompressible graph@(StateGraph _ adj _) = filter (compressible graph) $ IntMap.keys adj
 
+-- Fixes transitions which increment and decrement on the same
+-- register.
+fixMultipleOpsTrans :: Transition -> Transition
+fixMultipleOpsTrans (Transition ops conds) =
+  let ops' = IntMap.map (\regOps -> let m = MultiSet.occur Dec regOps
+                                        p = MultiSet.occur Inc regOps
+                                    in MultiSet.fromOccurList $ if m > p
+                                                                then [(Dec, m - p)]
+                                                                else [(Inc, p - m)]
+                        ) ops
+  in Transition ops' conds
+
 -- | The compressed state graph of the strongly universal register
 -- machine with 22 instructions of type /RiZM/ and /RiP/.
 --
