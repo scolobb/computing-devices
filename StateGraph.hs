@@ -23,6 +23,7 @@ module StateGraph
        , u22compressed
        , u20compressed
        , buildAdjTrans
+       , fixMultipleOps
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -307,6 +308,13 @@ fixMultipleOpsTrans (Transition ops conds) =
                                                                 else [(Inc, p - m)]
                         ) ops
   in Transition ops' conds
+
+-- | Applies 'fixMultipleOpsTrans' to all transitions in the given
+-- state graph.
+fixMultipleOps :: StateGraph -> StateGraph
+fixMultipleOps (StateGraph mx adj radj) =
+  let mx' = Map.map (Set.map fixMultipleOpsTrans) mx
+  in (StateGraph mx' adj radj)
 
 -- | The compressed state graph of the strongly universal register
 -- machine with 22 instructions of type /RiZM/ and /RiP/.
