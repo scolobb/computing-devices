@@ -303,11 +303,13 @@ fixMultipleOpsTrans :: Transition -> Transition
 fixMultipleOpsTrans (Transition ops conds) =
   let ops' = IntMap.map (\regOps -> let m = MultiSet.occur Dec regOps
                                         p = MultiSet.occur Inc regOps
-                                    in MultiSet.fromOccurList $ if m > p
-                                                                then [(Dec, m - p)]
-                                                                else [(Inc, p - m)]
+                                    in MultiSet.fromOccurList $ squash (p - m)
                         ) ops
-  in Transition ops' conds
+      newOps = IntMap.filter ((/=) MultiSet.empty) ops'
+  in Transition newOps conds
+  where squash x | x > 0 = [(Inc,  x)]
+                 | x < 0 = [(Dec, -x)]
+        squash _ = []
 
 -- | Applies 'fixMultipleOpsTrans' to all transitions in the given
 -- state graph.
