@@ -286,7 +286,7 @@ allCompressions graph0 = Writer.execWriter $ State.evalStateT (go [] graph0) Int
   where go pickedStates graph = do
           seen <- State.get
           let graphHash = hash graph
-          if graphHash `IntSet.member` seen
+          if (graphHash `IntSet.member` seen) || transitionsTooLong graph 6
             then return ()
             else do
             State.put $ graphHash `IntSet.insert` seen
