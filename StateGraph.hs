@@ -24,6 +24,8 @@ module StateGraph
        , u20compressed
        , buildAdjTrans
        , fixMultipleOps
+       , allCompressions
+       , buildMx
        ) where
 
 import qualified Data.Map.Strict as Map
