@@ -321,8 +321,7 @@ fixMultipleOps (StateGraph mx adj radj) =
 -- | The compressed state graph of the strongly universal register
 -- machine with 22 instructions of type /RiZM/ and /RiP/.
 --
--- This graph was generated automatically by 'allCompressions'.  All
--- attempts at formatting for readability were made by hand.
+-- This graph was generated automatically by 'allCompressions'.
 u22compressed :: StateGraph
 u22compressed = fixMultipleOps $ StateGraph
                 (Map.fromList [ ((1,1),Set.fromList [ Transition (IntMap.fromList [(1,MultiSet.fromOccurList [(Dec,1)]),(7,MultiSet.fromOccurList [(Inc,1)])])
@@ -377,8 +376,7 @@ u22compressed = fixMultipleOps $ StateGraph
 -- | The compressed state graph of the weakly universal register
 -- machine with 20 instructions of type /RiZM/ and /RiP/.
 --
--- This graph was generated automatically by 'allCompressions'.  All
--- attempts at formatting for readability were made by hand.
+-- This graph was generated automatically by 'allCompressions'.
 u20compressed :: StateGraph
 u20compressed = fixMultipleOps $ StateGraph
                 (Map.fromList [ ((1,1),Set.fromList [ Transition (IntMap.fromList [(1,MultiSet.fromOccurList [(Dec,1)]),(7,MultiSet.fromOccurList [(Inc,1)])])
