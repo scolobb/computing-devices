@@ -26,6 +26,7 @@ module StateGraph
        , fixMultipleOps
        , allCompressions
        , buildMx
+       , finalStates
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -173,6 +174,9 @@ listRegs :: StateGraph -> [Int]
 listRegs (StateGraph mx _ _) = sort . nub . concat
                                $ [ IntMap.keys ops | allTrans <- Map.elems mx
                                                    , (Transition ops _) <- Set.elems allTrans ]
+
+finalStates :: StateGraph -> [Int]
+finalStates (StateGraph _ adj _) = IntMap.keys $ IntMap.filter null adj
 
 -- | Checks if the supplied state can be compressed, i.e., thrown away
 -- by merging the transitions going out of this state with the
