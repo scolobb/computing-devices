@@ -28,6 +28,7 @@ module StateGraph
        , buildMx
        , finalStates
        , fromRM
+       , compressIncs
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -439,3 +440,20 @@ fromRM (RM.RegisterMachine _ prog) =
                                        ,( (p,q'),  ( [          ], [(r, Zero   )] ) )]
         mapper (p, (RM.RiP  r q   )) = [( (p,q ),  ( [(r, [Inc])], [            ] ) )]
         mapper (_,  RM.HALT        ) = []
+
+-- | Compresses all compressible states which only increment registers
+-- in all outgoing transitions.
+compressIncs :: StateGraph -> StateGraph
+compressIncs graph@(StateGraph mx adj _) =
+  let toCompress = [ v
+                   | (v, vAdj) <- IntMap.assocs adj,
+                     and' [ onlyIncs trans && compressible graph v
+                          | w <- vAdj, trans <- Set.elems $ mx Map.! (v, w) ]
+                   ]
+  in case toCompress of
+    [] -> graph
+    (state:_) -> compressIncs $ compress graph state
+  where onlyIncs (Transition ops _) = all (Dec `MultiSet.notMember`) $ IntMap.elems ops
+
+        and' [] = False
+        and' xs = and xs
