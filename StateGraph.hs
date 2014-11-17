@@ -27,6 +27,7 @@ module StateGraph
        , allCompressions
        , buildMx
        , finalStates
+       , fromRM
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -42,6 +43,7 @@ import Data.Maybe (catMaybes)
 import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.Trans.Writer.Lazy as Writer
 import qualified Control.Monad.Trans.State.Lazy as State
+import qualified RegisterMachine as RM
 
 -- | A register machine instruction (Korec).
 data Instruction = Dec | Inc
@@ -428,3 +430,12 @@ u20compressed = fixMultipleOps $ StateGraph
 
                 (IntMap.fromList [(1,[4,1]),(4,[10,4]),(10,[16,10,4,1]),(16,[34,18,1]),(18,[34,20,1]),(20,[34,16,1]),(34,[])])
                 (IntMap.fromList [(1,[20,18,16,10,1]),(4,[10,4,1]),(10,[10,4]),(16,[20,10]),(18,[16]),(20,[18]),(34,[20,18,16])])
+
+-- | Builds a state graph from the given register machine.
+fromRM :: RM.RegisterMachine -> StateGraph
+fromRM (RM.RegisterMachine _ prog) =
+  newStateGraph $ buildMx $ concatMap mapper $ IntMap.toList prog
+  where mapper (p, (RM.RiZM r q q')) = [( (p,q ),  ( [(r, [Dec])], [(r, NotZero)] ) )
+                                       ,( (p,q'),  ( [          ], [(r, Zero   )] ) )]
+        mapper (p, (RM.RiP  r q   )) = [( (p,q ),  ( [(r, [Inc])], [            ] ) )]
+        mapper (_,  RM.HALT        ) = []
