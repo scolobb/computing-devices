@@ -14,6 +14,7 @@ module StateGraph
        , StateGraph (..)
        , newStateGraph
        , stateCount
+       , transCount
        , states
        , halting
        , toDotHighlight
@@ -111,6 +112,9 @@ newStateGraph mx = StateGraph mx adj revAdj
 
 stateCount :: StateGraph -> Int
 stateCount (StateGraph _ adj _) = IntMap.size adj
+
+transCount :: StateGraph -> Int
+transCount (StateGraph mx _ _) = sum $ Map.elems $ Map.map Set.size mx
 
 states :: StateGraph -> [Int]
 states (StateGraph _ adj _) = IntMap.keys adj
