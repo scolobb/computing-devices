@@ -107,6 +107,7 @@ newStateGraph mx = StateGraph mx adj revAdj
         revAdj = buildXAdj (\(v, w) -> [(w, [v]), (v, [])])
         buildXAdj f = IntMap.map nub $ IntMap.fromListWith (++) $ (concatMap f) $ Map.keys mx
 
+stateCount :: StateGraph -> Int
 stateCount (StateGraph _ adj _) = IntMap.size adj
 
 -- An utility function that translates the convenient list and tuple
