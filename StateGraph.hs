@@ -14,6 +14,8 @@ module StateGraph
        , StateGraph (..)
        , newStateGraph
        , stateCount
+       , states
+       , halting
        , toDotHighlight
        , toDot
        , toFileHighlight
@@ -110,7 +112,13 @@ newStateGraph mx = StateGraph mx adj revAdj
 stateCount :: StateGraph -> Int
 stateCount (StateGraph _ adj _) = IntMap.size adj
 
--- An utility function that translates the convenient list and tuple
+states :: StateGraph -> [Int]
+states (StateGraph _ adj _) = IntMap.keys adj
+
+halting :: StateGraph -> [Int]
+halting (StateGraph _ adj _) = IntMap.keys $ IntMap.filter null adj
+
+-- an utility function that translates the convenient list and tuple
 -- representation of the state graph to the actual adjacency matrix.
 buildMx :: [( (Int,Int), ( [(Int, [Instruction])], [(Int, Condition)] ) )] -> Map.Map (Int, Int) (Set.Set Transition)
 buildMx = Map.fromListWith Set.union . map (\(e, (plainOps, plainConds)) ->
