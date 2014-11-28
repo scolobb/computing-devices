@@ -120,3 +120,8 @@ registerUse (RegisterMachine _ prog) reg =
                             else (ripUse, rizmUse)
             HALT -> (ripUse, rizmUse)
           )(0, 0) $ IntMap.elems prog
+
+-- | Breaks the list into groups of the given length.
+takeBy :: Int -> [a] -> [[a]]
+takeBy n xs@(_:_) | n > 0 = let (p,rest) = splitAt n xs in p : takeBy n rest
+takeBy _ _ = []
