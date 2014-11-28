@@ -32,6 +32,7 @@ module StateGraph
        , finalStates
        , fromRM
        , compressIncs
+       , sg2latex
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -470,3 +471,32 @@ compressIncs graph@(StateGraph mx adj _) =
 
         and' [] = False
         and' xs = and xs
+
+-- | Prints the state graph as a LaTeX table.
+sg2latex :: StateGraph -> String
+sg2latex (StateGraph mx _ _) =
+  let smx' = map (\((v,w), trans) ->
+                  let (ops, conds) = printTrans trans
+                  in (show v) ++ "& " ++ (show w) ++ "& " ++ ops ++ "& " ++ conds
+                ) $ explodeMx mx
+
+      lnbk = "\\\\\n"
+      smx = intercalate lnbk smx'
+  in "\\begin{tabular}{r|r||l|l}\n"
+     ++ "$q_i$ & $q_j$ & Conditions & Operations" ++ lnbk
+     ++ "\\hline\n"
+     ++ smx
+     ++ "\n\\end{tabular}"
+  where printOp (reg, Inc) = "$R" ++ (show reg) ++ "P$"
+        printOp (reg, Dec) = "$R" ++ (show reg) ++ "M$"
+
+        printCond (reg, Zero)    = "$R_" ++ (show reg) ++ "=0$"
+        printCond (reg, NotZero) = "$R_" ++ (show reg) ++ "\\neq 0$"
+
+        explodeWith f g = concatMap (\(key, vals) -> zip (repeat key) $ f vals) . g
+        explodeOps = explodeWith MultiSet.elems IntMap.toList
+        explodeMx = explodeWith Set.elems Map.toList
+
+        printTrans (Transition ops conds) =
+          ( intercalate ", " $ map printCond $ IntMap.toList conds
+          , intercalate ", " $ map printOp $ explodeOps ops )
