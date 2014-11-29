@@ -11,6 +11,7 @@ module RegisterMachine ( State
                        , u22
                        , u20
                        , registerUse
+                       , instr2latex
                        ) where
 
 import qualified Data.IntMap as IntMap
@@ -125,3 +126,11 @@ registerUse (RegisterMachine _ prog) reg =
 takeBy :: Int -> [a] -> [[a]]
 takeBy n xs@(_:_) | n > 0 = let (p,rest) = splitAt n xs in p : takeBy n rest
 takeBy _ _ = []
+
+-- | Prints a register machine instruction in LaTeX format.
+instr2latex :: State -> Instruction -> String
+instr2latex p (RiP r q) = "(q_" ++ (show p) ++ ", R" ++ (show r)
+                               ++ "P, q_" ++ (show q) ++ ")"
+instr2latex p (RiZM r q q') = "(q_" ++ (show p) ++ ", R" ++ (show r)
+                                   ++ "ZM, q_" ++ (show q) ++ ", q_" ++ (show q') ++ ")"
+instr2latex p HALT = "(q_" ++ (show p) ++ ", Stop)"
