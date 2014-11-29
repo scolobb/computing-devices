@@ -145,6 +145,6 @@ printProg cols prog =
   let lns = intercalate "\\\\\n" $ map (intercalate "& ")
             $ takeBy cols $ map (uncurry printInstr) $ IntMap.toAscList prog
       fmt = replicate cols 'l'
-  in "\\begin{tabular}{" ++ fmt ++ "}\n"
+  in "\\begin{longtable}{" ++ fmt ++ "}\n"
      ++ lns
-     ++ "\n\\end{tabular}"
+     ++ "\n\\end{longtable}"
