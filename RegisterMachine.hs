@@ -12,9 +12,11 @@ module RegisterMachine ( State
                        , u20
                        , registerUse
                        , printInstr
+                       , printProg
                        ) where
 
 import qualified Data.IntMap as IntMap
+import Data.List (intercalate)
 
 type State = Int
 type Register = Int
@@ -135,3 +137,14 @@ printInstr p (RiP r q) = "(q_" ++ (show p) ++ ", R" ++ (show r)
 printInstr p (RiZM r q q') = "(q_" ++ (show p) ++ ", R" ++ (show r)
                                    ++ "ZM, q_" ++ (show q) ++ ", q_" ++ (show q') ++ ")"
 printInstr p HALT = "(q_" ++ (show p) ++ ", Stop)"
+
+-- | Prints the commands of the given register machine as a LaTeX
+-- table with the given number of columns.
+printProg :: Int -> Program -> String
+printProg cols prog =
+  let lns = intercalate "\\\\\n" $ map (intercalate "& ")
+            $ takeBy cols $ map (uncurry printInstr) $ IntMap.toAscList prog
+      fmt = replicate cols 'l'
+  in "\\begin{tabular}{" ++ fmt ++ "}\n"
+     ++ lns
+     ++ "\n\\end{tabular}"
