@@ -490,8 +490,8 @@ printSG (StateGraph mx _ _) =
   where printOp (reg, Inc) = "$R" ++ (show reg) ++ "P$"
         printOp (reg, Dec) = "$R" ++ (show reg) ++ "M$"
 
-        printCond (reg, Zero)    = "$R_" ++ (show reg) ++ "=0$"
-        printCond (reg, NotZero) = "$R_" ++ (show reg) ++ "\\neq 0$"
+        printCond (reg, Zero)    = "$R_{" ++ (show reg) ++ "}=0$"
+        printCond (reg, NotZero) = "$R_{" ++ (show reg) ++ "}\\neq 0$"
 
         explodeWith f g = concatMap (\(key, vals) -> zip (repeat key) $ f vals) . g
         explodeOps = explodeWith MultiSet.elems IntMap.toList
