@@ -31,8 +31,9 @@ data Instruction
 
 type Program = IntMap.IntMap Instruction
 
-data RegisterMachine = RegisterMachine [Register] Program
-                 deriving (Show, Read, Eq, Ord)
+data RegisterMachine = RegisterMachine { registers :: [Register]
+                                       , program   :: Program
+                                       } deriving (Show, Read, Eq, Ord)
 
 -- | A (strongy) universal register machine with 22 instructions of
 -- types /RiP/ and /RiZM/.
