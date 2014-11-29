@@ -132,11 +132,11 @@ takeBy _ _ = []
 
 -- | Prints a register machine instruction in LaTeX format.
 printInstr :: State -> Instruction -> String
-printInstr p (RiP r q) = "$(q_" ++ (show p) ++ ", R" ++ (show r)
-                               ++ "P, q_" ++ (show q) ++ ")$"
-printInstr p (RiZM r q q') = "$(q_" ++ (show p) ++ ", R" ++ (show r)
-                                   ++ "ZM, q_" ++ (show q) ++ ", q_" ++ (show q') ++ ")$"
-printInstr p HALT = "$(q_" ++ (show p) ++ ", Stop)$"
+printInstr p (RiP r q) = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
+                               ++ "P, q_{" ++ (show q) ++ "})$"
+printInstr p (RiZM r q q') = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
+                                   ++ "ZM, q_{" ++ (show q) ++ "}, q_{" ++ (show q') ++ "})$"
+printInstr p HALT = "$(q_{" ++ (show p) ++ "}, Stop)$"
 
 -- | Prints the commands of the given register machine as a LaTeX
 -- table with the given number of columns.
