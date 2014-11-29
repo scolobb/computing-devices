@@ -32,7 +32,7 @@ module StateGraph
        , finalStates
        , fromRM
        , compressIncs
-       , sg2latex
+       , printSG
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -473,8 +473,8 @@ compressIncs graph@(StateGraph mx adj _) =
         and' xs = and xs
 
 -- | Prints the state graph as a LaTeX table.
-sg2latex :: StateGraph -> String
-sg2latex (StateGraph mx _ _) =
+printSG :: StateGraph -> String
+printSG (StateGraph mx _ _) =
   let smx' = map (\((v,w), trans) ->
                   let (ops, conds) = printTrans trans
                   in (show v) ++ "& " ++ (show w) ++ "& " ++ ops ++ "& " ++ conds
