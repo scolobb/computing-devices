@@ -32,7 +32,7 @@ module StateGraph
        , finalStates
        , fromRM
        , compressIncs
-       , printSG
+       , printSGOrig
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -472,9 +472,22 @@ compressIncs graph@(StateGraph mx adj _) =
         and' [] = False
         and' xs = and xs
 
+type PrintOpFunc = (Int, Instruction) -> String
+type PrintCondFunc = (Int, Condition) -> String
+
+-- | Prints an instruction of the state graph in Korec-like format.
+printOpKorec :: PrintOpFunc
+printOpKorec (reg, Inc) = "$R" ++ (show reg) ++ "P$"
+printOpKorec (reg, Dec) = "$R" ++ (show reg) ++ "M$"
+
+-- | Prints a condition of the state graph in plain format.
+printCondPlain :: PrintCondFunc
+printCondPlain (reg, Zero)    = "$R_{" ++ (show reg) ++ "}=0$"
+printCondPlain (reg, NotZero) = "$R_{" ++ (show reg) ++ "}\\neq 0$"
+
 -- | Prints the state graph as a LaTeX table.
-printSG :: StateGraph -> String
-printSG (StateGraph mx _ _) =
+printSG :: PrintOpFunc -> PrintCondFunc -> StateGraph -> String
+printSG printOp printCond (StateGraph mx _ _) =
   let smx' = map (\((v,w), trans) ->
                   let (ops, conds) = printTrans trans
                   in (show v) ++ "& " ++ (show w) ++ "& " ++ ops ++ "& " ++ conds
@@ -487,16 +500,14 @@ printSG (StateGraph mx _ _) =
      ++ "\\hline\n"
      ++ smx
      ++ "\n\\end{tabular}"
-  where printOp (reg, Inc) = "$R" ++ (show reg) ++ "P$"
-        printOp (reg, Dec) = "$R" ++ (show reg) ++ "M$"
-
-        printCond (reg, Zero)    = "$R_{" ++ (show reg) ++ "}=0$"
-        printCond (reg, NotZero) = "$R_{" ++ (show reg) ++ "}\\neq 0$"
-
-        explodeWith f g = concatMap (\(key, vals) -> zip (repeat key) $ f vals) . g
+  where explodeWith f g = concatMap (\(key, vals) -> zip (repeat key) $ f vals) . g
         explodeOps = explodeWith MultiSet.elems IntMap.toList
         explodeMx = explodeWith Set.elems Map.toList
 
         printTrans (Transition ops conds) =
           ( intercalate ", " $ map printCond $ IntMap.toList conds
           , intercalate ", " $ map printOp $ explodeOps ops )
+
+-- | Prints the state graph as a LaTeX table using the original
+-- notations.
+printSGOrig = printSG printOpKorec printCondPlain
