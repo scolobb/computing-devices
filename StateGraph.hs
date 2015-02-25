@@ -33,6 +33,7 @@ module StateGraph
        , fromRM
        , compressIncs
        , printSGOrig
+       , printSGPhD
        ) where
 
 import qualified Data.Map.Strict as Map
@@ -511,3 +512,19 @@ printSG printOp printCond (StateGraph mx _ _) =
 -- | Prints the state graph as a LaTeX table using the original
 -- notations.
 printSGOrig = printSG printOpKorec printCondPlain
+
+-- | Prints an instruction of the state graph in the format I use in
+-- my PhD thesis.
+printOpPhD :: PrintOpFunc
+printOpPhD (reg, Inc) = "A(" ++ (show reg) ++ ")"
+printOpPhD (reg, Dec) = "S(" ++ (show reg) ++ ")"
+
+-- | Prints a condition of the state graph in the format I use in my
+-- PhD thesis.
+printCondPhD :: PrintCondFunc
+printCondPhD (reg, Zero)    = "Z("  ++ (show reg) ++ ")"
+printCondPhD (reg, NotZero) = "NZ(" ++ (show reg) ++ ")"
+
+-- | Prints the state graph as a LaTeX table using the unified
+-- notations I use in my PhD thesis.
+printSGPhD = printSG printOpPhD printCondPhD
