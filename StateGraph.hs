@@ -491,7 +491,7 @@ printSG :: PrintOpFunc -> PrintCondFunc -> StateGraph -> String
 printSG printOp printCond (StateGraph mx _ _) =
   let smx' = map (\((v,w), trans) ->
                   let (ops, conds) = printTrans trans
-                  in (show v) ++ "& " ++ (show w) ++ "& " ++ ops ++ "& " ++ conds
+                  in (printState v) ++ "& " ++ (printState w) ++ "& " ++ ops ++ "& " ++ conds
                 ) $ explodeMx mx
 
       lnbk = "\\\\\n"
@@ -508,6 +508,8 @@ printSG printOp printCond (StateGraph mx _ _) =
         printTrans (Transition ops conds) =
           ( intercalate ", " $ map printCond $ IntMap.toList conds
           , intercalate ", " $ map printOp $ explodeOps ops )
+
+        printState i = "$q_{" ++ (show i) ++ "}$"
 
 -- | Prints the state graph as a LaTeX table using the original
 -- notations.
