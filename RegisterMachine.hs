@@ -11,8 +11,9 @@ module RegisterMachine ( State
                        , u22
                        , u20
                        , registerUse
-                       , printInstr
-                       , printProg
+                       , printInstrKorec
+                       , printProgKorec
+                       , printProgPhD
                        ) where
 
 import qualified Data.IntMap as IntMap
@@ -130,21 +131,42 @@ takeBy :: Int -> [a] -> [[a]]
 takeBy n xs@(_:_) | n > 0 = let (p,rest) = splitAt n xs in p : takeBy n rest
 takeBy _ _ = []
 
--- | Prints a register machine instruction in LaTeX format.
-printInstr :: State -> Instruction -> String
-printInstr p (RiP r q) = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
-                               ++ "P, q_{" ++ (show q) ++ "})$"
-printInstr p (RiZM r q q') = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
-                                   ++ "ZM, q_{" ++ (show q) ++ "}, q_{" ++ (show q') ++ "})$"
-printInstr p HALT = "$(q_{" ++ (show p) ++ "}, Stop)$"
+type InstrPrinter = State -> Instruction -> String
+
+-- | Prints a register machine instruction in LaTeX format using
+-- Korec's notations.
+printInstrKorec :: State -> Instruction -> String
+printInstrKorec p (RiP r q) = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
+                              ++ "P, q_{" ++ (show q) ++ "})$"
+printInstrKorec p (RiZM r q q') = "$(q_{" ++ (show p) ++ "}, R" ++ (show r)
+                                  ++ "ZM, q_{" ++ (show q) ++ "}, q_{" ++ (show q') ++ "})$"
+printInstrKorec p HALT = "$(q_{" ++ (show p) ++ "}, Stop)$"
+
+-- | Prints a register machine instruction in LaTeX format using the
+-- notations I have in my PhD thesis.
+printInstrPhD :: State -> Instruction -> String
+printInstrPhD p (RiP r q) = "$(q_{" ++ (show p) ++ "}, A(" ++ (show r)
+                              ++ "), q_{" ++ (show q) ++ "})$"
+printInstrPhD p (RiZM r q q') = "$(q_{" ++ (show p) ++ "}, S(" ++ (show r)
+                                  ++ "), q_{" ++ (show q) ++ "}, q_{" ++ (show q') ++ "})$"
+printInstrPhD p HALT = "$(q_{" ++ (show p) ++ "}, Stop)$"
 
 -- | Prints the commands of the given register machine as a LaTeX
 -- table with the given number of columns.
-printProg :: Int -> Program -> String
-printProg cols prog =
+printProg :: InstrPrinter -> Int -> Program -> String
+printProg printInstr cols prog =
   let lns = intercalate "\\\\\n" $ map (intercalate "& ")
             $ takeBy cols $ map (uncurry printInstr) $ IntMap.toAscList prog
       fmt = replicate cols 'l'
   in "\\begin{longtable}{" ++ fmt ++ "}\n"
      ++ lns
      ++ "\n\\end{longtable}"
+
+-- | Prints the commands of the given register machine as a LaTeX
+-- table with the given number of columns in Korec's notations.
+printProgKorec = printProg printInstrKorec
+
+-- | Prints the commands of the given register machine as a LaTeX
+-- table with the given number of columns using the notations from my
+-- PhD thesis.
+printProgPhD = printProg printInstrPhD
